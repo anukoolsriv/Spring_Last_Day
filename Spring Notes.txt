@@ -1,0 +1,265 @@
+Day 1
+
+-> Spring(PICO container)
+	- java platform which provides comprehensive infrastructure support for the application
+	  so that developer can concentrate on business logic
+	- most striking feature - *dependency injection(DI)*
+	- was introduced to overcome disadvantages of EJB2(Enterprise Java Bean)
+													- SESSION	(service layer)
+													- ENTITY	(DAO layer)
+													- MESSAGE DRIVEN (Service layer)
+													- heavy weight container
+	- 32-35 modules in it's ecosystem
+	- Spring IOC - core - fits in business service layer
+	- JSF - Java Server Faces
+	- EJB:
+		- application created needs to be deployed on the application server
+		- application server is a heavyweight container
+		- takes long time to start
+	-Spring:
+		- take the only module required from spring ecosystem to develop the application
+		- do not require application server (websphere, jboss, glassfish, weblogic)
+	- spring will help create loosely coupled application
+	- Spring has 3 types of dependency injection:
+		- Setter injection
+		- constructor injection
+		- field injection
+	- spring framework is responsible for creating and injecting the object
+	- 2 central interfaces to access the entire configuration info of spring application:
+		- BeanFactory:
+			- present inside spring-bean-jar
+		- ApplicationContext:
+			- present in core-jar
+			- usually one context for entire application
+			- all singleton beans will be ready to useS
+			- ClassPathXmlApplicationContext(): - will check the file in the class path
+				- implementation of ApplicationContext
+				- configuration should be stored in XML file
+				- responsible for reading config from xml file
+				- config should be present in build path
+	- <beans> root tag for spring config in pom.xml:
+		- object is created when application context is ready
+		- object of only the bean defined will be created
+		- scope="singleton":
+			- default value is singleton
+			- only one instance of the given class will be created at any given time			
+		- ApplicationContext context = new ClassPathXmlApplicationContext("spring-config.xml");
+			- singleton beans wil be created after creation of ApplicationContext
+		- scope="prototype":
+			- multiple instances
+		- using <property> tag- we can call setter methods
+		- using <constructor-arg> tag - we can access parameters from constructor
+		- ref="address" - used refer another bean as a property in one bean
+		- scope of model object is prototype - where we call getBean() explicitly
+		- scope of Service as well as Dao are made singleton
+		- lazy-init="default", the bean will get created eagerly
+			- if true - bean is created only whenever getBean() is called
+			- default value is false
+			- lazy-init is applicable only for singleton bean, not for prototype bean
+	
+	- interfaces help in creating loosely coupled implementations
+	
+	- ClassPathXmlApplicationContext()							- FileSystemXmlApplicationContext()
+		will search the XML config file								will search the XML file in the
+		in the class path(build path) of the project				specified location. 
+																	will have to specify full path of xml file	
+																	
+--------------------------------------------------------------------------------------------------------------------
+Day 2				
+													
+	- AnnotationConfigApplicationContext()
+		- one more implementation of ApplicationContext interface
+		- takes config class as parameter
+		- need to define all the beans required for the application in the config class
+	- @Configuration
+		- to specify a class as config class for spring
+	- @Bean
+		- store bean object inside ApplicationContext
+		- specify on top of method
+		- return type of a method will be registered in the ApplicationContext as a bean
+	- @Repository
+		- treat DAO classes as bean and register with ApplicationContext
+	- @Service
+		- treat service classes as bean and register with ApplicationContext
+	- @Component
+		- treat model classes as bean and register with ApplicationContext
+	@ComponentScan(basePackages="com.lti")
+		- search for components in the application in the given package and all subpackages
+		- search all the defined beans
+	
+	- define a bean by:
+		- @Bean
+		- @Component
+		- @Repository
+		- @Service
+	
+	- if name of bean in above case is not specified, then class name is the bean name in camel case
+	
+	- @AutoWired
+		- to connect a reference of one bean in another bean
+		- to make it happen automatically
+		- field annotation
+		- 4 types:
+			- No 		: default
+			- ByName 	: will check the beans with given name from property of one bean
+			- ByType	: will check the beans with given type from bean property, will give error if multiple beans are found
+			- constructor: will search for constructor that takes object of given type in bean as a parameter
+		- by default will search for type of object in project path
+			- if only one object exists, it'll bind to that object
+			- if more than one exists, then it'll search for 
+				- @Qualifier, if unavailable
+					search byName, if unavailable
+						then search if @Primary exists in any bean and attach it to the autowired
+							else error
+		
+	- Working of autowired
+		- @Autowired
+		  @Qualifier("address1")
+		  private Address address
+			- spring is going to search for Address type object, if there is single object and found,
+			  then that object gets wired with Address reference
+			- if there multiple address type object are found, then it will search for @Qualifier
+			- if no @Qualifier found, then it'll search bean byName (name="address")
+			- if no name is matching, then it'll look for @Primary
+			- if at all still an ambiguity exists, an exception will be thrown (no qualifying bean available)
+	
+	- JDBC Template
+		- Class present in a spring jdbc module
+		- only SQL commands can used using JDBCTemplate
+		- has a method update() which is used for executing any DML statement
+		- internally uses a property DataSource (has 4 properties)
+			- Driver
+			- URL
+			- username
+			- password
+			
+------------------------------------------------------------------------------------------------------------------
+Day 3
+	- variable arguements are always the last parameters of the jdbcTemplate query methods
+	- RowMapper - interface present in SpringJDBC module and responsible for mapping columns of database table to field of a class
+	- query() - returns List<>
+	- queryForObject() returns a single record
+	- @Autowired
+	  private DataSource dataSource;
+	-  binds dataSource to DataSource Bean
+	
+	- Spring bean life cycle
+		- initialising bean
+		- disposable bean
+	- spring mvc
+		M	-> 	POJO
+		V 	->	JSP
+		C 	->	Normal Java Class
+		DS	-> DispatcherServlet
+		- module from spring eco system based on model-view-controller design pattern
+		- also based on front controller deisgn pattern
+		- all incoming requests or outgoing response has to go through FrontController (by Spring)
+		- FrontController
+			- DispatcherServlet - class that will act as front controller for spring 
+		- <url-pattern>/</url-pattern> - will redirect all requests to the class
+		
+		- @Controller
+			- class object will be created by spring
+			- dispatcherservlet-servlet.xml - name of servlet file
+			- @RequestMapping(path="welcome.do") - will 
+
+---------------------------------------------------------------------------------------------------------------------
+Day 4
+
+-> steps to create spring mvc project
+
+	- create dynamic web project
+	- convert to maven project
+	- add spring-webmvc in pom.xml
+	- configure dispatcher servlet in web.xml file
+	- create spring mvc config file based on name of diapatcher servlet
+	- create controller class with a method
+	- method should have @RequestMapping annotation using which incoming request will be mapped
+		which returns name of jsp file
+	- @ViewResolver
+		- will resolver is an interface present in spring mvc which will help
+		  in resolving trh logical name (Ex: index.html or index.jsp) which will be 
+		  returned by controller method to the actual page
+		- InternalResouceViewResolver - implementation of ViewResolver interface
+		  which actually does the work of resolving the view
+					  
+		- recommended to keep jsp files in WEB-INF ( not directly accessible to user
+			- user has to go through RequestDispatcher to access it
+			
+		- HttpServletRequest request - passed as parameter to function
+			- object is created by spring
+			
+		- Model | ModelAndView - 2 classes of spring to transfer data from controller to JSP page
+			- Model - contains only data
+			- ModelAndView - contains both data and view name
+			
+			
+	- Named Paramter JDBCTemplate - help to send named parameter
+	
+----------------------------------------------------------------------------------------------------------------------
+-> Day 5
+
+	- Scope of a component	
+		- singleton
+		- prototype
+		- request (only useful for spring request bean)
+		- session (only useful for spring request bean)
+
+	- DispatcherServlet 
+		- loaded only once, even before the call of 1st user request
+	
+	- Ways to get value from html form to spring mvc controller
+		- request.getParameter("") - need to inject HttpServletRequest to the controller method
+		- @RequestParam("") - used to read parameter explicitly
+
+-> Spring bean life cycle
+	- DoesNotExist
+		- Initialising bean contains:
+			- afterPropertySet()
+				- called after all properties are set(fields are initialised)
+	- Ready
+		- Disposable Bean contains
+			- destroy()	
+	
+	BeanFactory ------> Application Context -------> ConfigurableApplicationContext
+	
+	- ConfigurableApplicationContext
+		- contains close() - to close all beans
+			- not called usually since deletetion of prototype bean is not handled by spring container
+		
+	- creation and destruction of singleton is handled by spring container
+	
+	- 3 ways(methods) to include life cycle methods in spring bean
+		1) implementing interfaces (InitialisingBean, DisposableBean)
+		2) including customInit() [init-method="method name"] and customDelete() [destroy-method=""] methods
+		3) including @PostConstruct and @PreDestroy() annotations
+	
+-----------------------------------------------------------------------------------------------------------------------
+-> Spring Boot
+	- module present in spring ecosystem which will help in developing spring application much more faster
+	- follows convention over configuration
+	- no need to include server explicitly, will be provided by spring implicitly
+	- offers a starter template
+	- when we include web starter, there is no need to include any web server, it'll be included by spring boot (tomcat server by default (port 8080))
+	- every method is a resource, and is identified by URL
+	- 2 resources cannot be deployed on the same end point
+	- need to annotate @SpringBootApplication on top of main class
+		- does the work of 3 annotations
+			- @Annotation
+			- @ComponentScan
+			- @EnableAutoConfiguration **Important**
+				- responsible for auto configuring all beans present inside build path
+	- POSTMAN 
+		- client tool to access restful services
+	
+-----------------------------------------------------------------------------------------------------------------------
+-> Day 6
+	- 
+	
+-----------------------------------------------------------------------------------------------------------------------
+- instantiate using spring
+	- set
+	- map
+	- arraylist
+	- properties
+-AutoWiring
